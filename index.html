@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+        <title> My title </title>
+        <link rel="stylesheet" href="main.css"/>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    </head>
+
+  <body>
+    <H1>Webmap</H1>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-hash/0.2.1/leaflet-hash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.5.0/proj4.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4leaflet/1.0.2/proj4leaflet.js"></script>
+    <div id="map"></div>
+    <script>
+
+    const myGeojson = {
+     "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {},
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+        [
+          [
+            4.5351433753967285,
+            52.367476718843164
+          ],
+          [
+            4.534735679626465,
+            52.36726708725766
+          ],
+          [
+            4.531441926956177,
+            52.3676732475511
+          ],
+          [
+            4.5312488079071045,
+            52.36583239439388
+          ],
+          [
+            4.534209966659546,
+            52.36575377973978
+          ],
+          [
+            4.5351433753967285,
+            52.367476718843164
+          ]
+        ]
+      ]
+    }
+    }
+    ]
+    }
+
+// map definition
+    const RDnew = new L.Proj.CRS( 'EPSG:28992','+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +units=m +towgs84=565.2369,50.0087,465.658,-0.406857330322398,0.350732676542563,-1.8703473836068,4.0812 +no_defs',
+        {
+            resolutions: [3440.640, 1720.320, 860.160, 430.080, 215.040, 107.520, 53.760, 26.880, 13.440, 6.720, 3.360, 1.680, 0.840, 0.420, 0.210],
+            bounds: L.bounds([-285401.92, 22598.08], [595401.9199999999, 903401.9199999999]),
+            origin: [-285401.92, 22598.08]
+        }
+      );
+
+      //initialize the map
+      const map = L.map('map', {
+        crs: RDnew,
+        zoom: 13, //Zoom scale RD new
+        center: [52.37214915, 4.53013515] //webmercator coördinaten
+      });
+
+      //Create baselayer - tiles
+      const pdokachtergrondkaart = new L.TileLayer('https://geodata.nationaalgeoregister.nl/tiles/service/tms/1.0.0/brtachtergrondkaartwater/EPSG:28992/{z}/{x}/{y}.png', {
+        minZoom: 0,
+        maxZoom: 13,
+        tms: true,
+        attribution: 'Map data: <a href="http://www.kadaster.nl">Kadaster</a>'
+      });
+
+      pdokachtergrondkaart.addTo(map);
+
+// ADD the geoJSON Layer
+      L.geoJSON(myGeojson).addTo(map);
+
+//create a empty geojson layer
+      const geojson = L.geoJson(null,{
+        pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, geojsonMarkerOptions);
+        }
+    }).addTo(map);
+
+      // Fetch the geojson file
+      fetch("./trafic_accidents_wageningen_2017.geojson")
+          .then(response => response.json())
+          .then(data => {
+              geojson.addData(data);
+          })
+
+      // Create a marker style
+      const geojsonMarkerOptions = {
+        radius: 8,
+        fillColor: "#ff7800",
+        color: "#000",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+      };
+
+      // Create a marker function
+      function geojsonMarkerFunction(feature) {
+         return {
+         radius: feature.properties.aantal_partijen*2,
+         fillColor: "#ff7800",
+         color: "#000",
+         weight: 1,
+         opacity: 1,
+         fillOpacity: 0.8
+         }
+      };
+
+
+// ADD a WMS layer
+const cbs = L.tileLayer.wms('https://geodata.nationaalgeoregister.nl/wijkenbuurten2018/wms', {
+        'layers': 'cbs_buurten_2018',
+        'styles': 'wijkenbuurten2018:wijkenbuurten_thema_buurten_default',
+        'srs': 'EPSG:28992',
+        'format': 'image/png',
+        'transparent': true
+    }).addTo(map);
+
+// Hash in URL
+      const hash = new L.Hash(map);
+
+      let marker1 = L.marker([52.36762163, 4.53516698]).addTo(map);
+      let marker2 = L.marker([52.37327893, 4.53011584]).addTo(map);
+      let marker3 = L.marker([52.36522627, 4.518530841]).addTo(map);
+
+//add pop-ups
+      let popup = "HomeHome";
+      marker1.bindPopup(popup);
+
+      let popup2 = "Coffeeee";
+      marker2.bindPopup(popup2);
+
+      let popup3 = "Beach";
+      marker3.bindPopup(popup3);
+
+//add a circle
+      let circle =  L.circle([52.36762163, 4.53516698], 500, {
+        color: 'rgba(28, 166, 143, 0.9)',
+        fillColor: 'rgba(28, 166, 143, 0.2)',
+        fillOpacity: 0.5
+      }).addTo(map);
+
+      let polygon = L.polygon(
+        [[
+          [52.36762163, 4.53516698],
+          [52.37327893, 4.53011584],
+          [52.36522627, 4.518530841]
+        ]]).addTo(map);
+
+    </script>
+  </body>
+</html>
